@@ -27,6 +27,10 @@ const connection = await pool.connect();
 await pg.query('SELECT $1::text as name', ['foo']);
 ```
 
+## Motivation
+
+`postgres` is leaner/faster implementation of PostgreSQL protocol in Node.js than `pg`. However, `postgres` API is very different from the more broadly adopted [`pg` client](https://www.npmjs.com/package/pg). This package allows to adopt `postgres` without going through a painful migration. In particular, this compatibility layer has been designed to allow adoption of `postgres` using [Slonik PostgreSQL client](https://www.npmjs.com/package/slonik).
+
 ## Scope
 
 `postgres-bridge` is limited to the API that is consumed by [Slonik PostgreSQL client](https://www.npmjs.com/package/slonik), i.e. Using `postgres-bridge` you are able to use [`postgres`](https://www.npmjs.com/package/postgres) with Slonik.
