@@ -1,3 +1,6 @@
+import {
+  EventEmitter,
+} from 'node:events';
 import genericPool from 'generic-pool';
 import type Postgres from 'postgres';
 import {
@@ -34,6 +37,8 @@ type QueryResult = {
 };
 
 export const bridge = (postgres: typeof Postgres, poolConfiguration: PgPool) => {
+  const events = new EventEmitter();
+
   const pool = genericPool.createPool<AnySql>({
     create: async () => {
       return postgres({
@@ -61,7 +66,7 @@ export const bridge = (postgres: typeof Postgres, poolConfiguration: PgPool) => 
     connect: async () => {
       const connection = await pool.acquire();
 
-      return {
+      const compatibleConnection = {
         query: async (sql: string): Promise<QueryResult> => {
           // https://github.com/porsager/postgres#result-array
           const resultArray = await connection.unsafe(sql);
@@ -79,6 +84,12 @@ export const bridge = (postgres: typeof Postgres, poolConfiguration: PgPool) => 
           };
         },
       };
+
+      events.emit('connect', compatibleConnection);
+
+      return compatibleConnection;
     },
+    off: events.off.bind(events),
+    on: events.on.bind(events),
   };
 };
