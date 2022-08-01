@@ -33,6 +33,7 @@
     "eslint": "^8.11.0",
     "eslint-config-canonical": "^33.0.1",
     "husky": "^7.0.2",
+    "pg": "^8.7.3",
     "postgres": "^3.2.4",
     "semantic-release": "^19.0.2",
     "sinon": "^13.0.2",
