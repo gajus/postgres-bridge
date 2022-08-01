@@ -40,6 +40,7 @@ Supported features:
 * `pool.connect`
 * `connection.query`
 * `connect` event
+* `notice` event
 
 Please submit PR if you require additional compatibility.
 
