@@ -58,6 +58,8 @@ for (const {
     t.true(spy.called);
 
     t.is(spy.firstCall.args[0], connection);
+
+    t.is(pool.totalCount, 0);
   });
 
   test(clientName + ': "notice event is fired when connection produces a notice"', async (t) => {

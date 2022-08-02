@@ -64,10 +64,11 @@ type ArrayParameter<T extends readonly any[] = readonly any[]> = Parameter<T | T
 type SerializableParameter<T = never> = ArrayParameter | Parameter<any> | ReadonlyArray<SerializableParameter<T>> | Serializable | T | never;
 
 export type BridgetClient = {
-  end: () => void,
+  end: () => Promise<void>,
   off: (eventName: string, listener: (...args: any[]) => void) => void,
   on: (eventName: string, listener: (...args: any[]) => void) => void,
   query: (sql: string, parameters: SerializableParameter[]) => Promise<QueryResult>,
+  release: () => Promise<void>,
 };
 
 export const createBridge = (postgres: typeof Postgres) => {
@@ -135,7 +136,7 @@ export const createBridge = (postgres: typeof Postgres) => {
           return compatibleConnection;
         },
         destroy: async (client: BridgetClient) => {
-          client.end();
+          await client.end();
         },
       }, {
         max: poolConfiguration.max ?? 10,
@@ -155,8 +156,8 @@ export const createBridge = (postgres: typeof Postgres) => {
       // TODO implement logic equivalent to https://github.com/brianc/node-postgres/blob/master/packages/pg-pool/index.js#L109-L152
     }
 
-    public async _remove (client: {end: () => Promise<void>, }) {
-      await client.end();
+    public async _remove (client: BridgetClient) {
+      await this.pool.destroy(client);
 
       this.poolEvents.emit('remove', client);
     }
@@ -190,7 +191,7 @@ export const createBridge = (postgres: typeof Postgres) => {
 
     public async end () {
       for (const client of this._clients) {
-        client.end();
+        await client.end();
       }
     }
   };
