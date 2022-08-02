@@ -18,7 +18,6 @@
       "ts-node/register/transpile-only"
     ]
   },
-  "bin": "./dist/src/bridge.js",
   "dependencies": {
     "generic-pool": "^3.8.2"
   },
@@ -55,6 +54,7 @@
     "compatibility"
   ],
   "license": "BSD-3-Clause",
+  "main": "./dist/src/bridge.js",
   "name": "postgres-bridge",
   "repository": {
     "type": "git",
