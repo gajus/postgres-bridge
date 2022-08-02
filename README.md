@@ -49,7 +49,9 @@ Known incompatibilities:
 
 * `connection.processID` not implemented
 * `pool._pulseQueue` not implemented
-* callback (CPS) interface not implemented (use promises instead)
+* [callback (CPS) interface](https://github.com/brianc/node-postgres/tree/master/packages/pg-pool#drop-in-backwards-compatible) is not implemented (use promises instead)
+* [providing configuration using environment variables](https://github.com/brianc/node-postgres/tree/master/packages/pg-pool#environment-variables) is not implemented
+* [bring your own promise](https://github.com/brianc/node-postgres/tree/master/packages/pg-pool#bring-your-own-promise) is not implemented
 
 Please submit PR if you require additional compatibility.
 
