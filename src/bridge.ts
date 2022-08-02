@@ -157,6 +157,8 @@ export const createBridge = (postgres: typeof Postgres) => {
 
     public async _remove (client: {end: () => Promise<void>, }) {
       await client.end();
+
+      this.poolEvents.emit('remove', client);
     }
 
     public get _clients (): BridgetClient[] {

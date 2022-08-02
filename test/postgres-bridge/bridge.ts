@@ -42,6 +42,24 @@ for (const {
     t.is(spy.firstCall.args[0], connection);
   });
 
+  test(clientName + ': "remove" event is fired when connection is removed', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    const spy = sinon.spy();
+
+    pool.on('remove', spy);
+
+    const connection = await pool.connect();
+
+    await pool._remove(connection);
+
+    t.true(spy.called);
+
+    t.is(spy.firstCall.args[0], connection);
+  });
+
   test(clientName + ': "notice event is fired when connection produces a notice"', async (t) => {
     const pool = new Pool({
       user: 'postgres',

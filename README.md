@@ -42,6 +42,7 @@ Supported features:
 * `pool.connect`
 * `connection.query`
 * `connect` event
+* `remove` event
 * `notice` event
 
 Known incompatibilities:
