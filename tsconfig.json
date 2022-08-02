@@ -6,6 +6,7 @@
       "es2020"
     ],
     "module": "commonjs",
+    "outDir": "dist",
     "rootDir": ".",
     "sourceMap": true,
     "strict": true,
