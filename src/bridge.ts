@@ -127,8 +127,8 @@ export const createBridge = (postgres: typeof Postgres) => {
       // TODO implement logic equivalent to https://github.com/brianc/node-postgres/blob/master/packages/pg-pool/index.js#L109-L152
     }
 
-    public _remove () {
-      // TODO implement logic equivalent to https://github.com/brianc/node-postgres/blob/master/packages/pg-pool/index.js#L154-L164
+    public async _remove (client: {end: () => Promise<void>, }) {
+      await client.end();
     }
 
     public get idleCount () {
