@@ -41,9 +41,9 @@ export type BridgetClient = {
 
 export const createBridge = (postgres: typeof Postgres) => {
   return class PostgresBridge {
-    private readonly poolEvents: EventEmitter;
+    public readonly poolEvents: EventEmitter;
 
-    private readonly pool: GenericPool<BridgetClient>;
+    public readonly pool: GenericPool<BridgetClient>;
 
     public constructor (poolConfiguration: PgPool) {
       this.poolEvents = new EventEmitter();
