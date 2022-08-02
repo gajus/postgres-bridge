@@ -151,25 +151,49 @@ for (const {
     t.is(pool.idleCount, 1);
   });
 
-  test(clientName + ': connection.query() returns expected results', async (t) => {
+  test(clientName + ': connection.query() returns integers', async (t) => {
     const pool = new Pool({
       user: 'postgres',
     });
 
     const connection = await pool.connect();
 
-    const result = await connection.query('SELECT 1');
+    const result = await connection.query('SELECT 1::int4 AS foo');
 
     t.is(result.rows.length, 1);
     t.is(result.command, 'SELECT');
     t.like(result.rows[0],
       {
-        '?column?': 1,
+        foo: 1,
       });
     t.like(result.fields[0],
       {
         dataTypeID: 23,
-        name: '?column?',
+        name: 'foo',
+      });
+  });
+
+  test(clientName + ': connection.query() returns integer arrays', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT ARRAY[1]::int4[] AS foo');
+
+    t.is(result.rows.length, 1);
+    t.is(result.command, 'SELECT');
+    t.like(result.rows[0],
+      {
+        foo: [
+          1,
+        ],
+      });
+    t.like(result.fields[0],
+      {
+        dataTypeID: 1_007,
+        name: 'foo',
       });
   });
 
