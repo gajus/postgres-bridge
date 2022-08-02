@@ -7,6 +7,16 @@ import genericPool, {
   type Pool as GenericPool,
 } from 'generic-pool';
 import type Postgres from 'postgres';
+import {
+  Roarr,
+} from 'roarr';
+import {
+  serializeError,
+} from 'serialize-error';
+
+const log = Roarr.child({
+  package: 'postgres-bridge',
+});
 
 type PgPool = {
   database?: string,
@@ -17,6 +27,9 @@ type PgPool = {
   password?: string,
   port?: number,
   ssl?: boolean,
+  types?: {
+    getTypeParser: (id: number, format?: string) => any,
+  },
   user?: string,
 };
 
@@ -63,6 +76,11 @@ type ArrayParameter<T extends readonly any[] = readonly any[]> = Parameter<T | T
 
 type SerializableParameter<T = never> = ArrayParameter | Parameter<any> | ReadonlyArray<SerializableParameter<T>> | Serializable | T | never;
 
+type TypeParser = {
+  from: number[],
+  parse: (value: any) => any,
+};
+
 export type BridgetClient = {
   end: () => Promise<void>,
   off: (eventName: string, listener: (...args: any[]) => void) => void,
@@ -80,9 +98,50 @@ export const createPostgresBridge = (postgres: typeof Postgres) => {
     public constructor (poolConfiguration: PgPool) {
       this.poolEvents = new EventEmitter();
 
+      let types: TypeParser[];
+
       this.pool = genericPool.createPool<BridgetClient>({
         create: async () => {
           const connectionEvents = new EventEmitter();
+
+          if (poolConfiguration.types && !types) {
+            const sql = postgres({
+              database: poolConfiguration.database,
+              fetch_types: false,
+              host: poolConfiguration.host ?? 'localhost',
+              max: 1,
+              password: poolConfiguration.password,
+              port: poolConfiguration.port ?? 5_432,
+              ssl: poolConfiguration.ssl,
+              username: poolConfiguration.user,
+            });
+
+            const pgTypes = await sql`select typname, oid, typarray from pg_type order by oid`;
+
+            // eslint-disable-next-line require-atomic-updates
+            types = [];
+
+            for (const pgType of pgTypes) {
+              let typeParser;
+
+              try {
+                typeParser = poolConfiguration.types?.getTypeParser(pgType.oid);
+              } catch (error) {
+                log.error({
+                  error: serializeError(error),
+                }, 'could not get type parser');
+              }
+
+              if (typeParser) {
+                types.push({
+                  from: [
+                    pgType.oid,
+                  ],
+                  parse: typeParser,
+                });
+              }
+            }
+          }
 
           const connection = postgres({
             database: poolConfiguration.database,
@@ -103,6 +162,7 @@ export const createPostgresBridge = (postgres: typeof Postgres) => {
             password: poolConfiguration.password,
             port: poolConfiguration.port ?? 5_432,
             ssl: poolConfiguration.ssl,
+            types: types as any,
             username: poolConfiguration.user,
           });
 

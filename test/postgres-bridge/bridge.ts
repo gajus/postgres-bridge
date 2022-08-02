@@ -4,6 +4,9 @@ import {
 // @ts-expect-error-next-line pg types not available
 } from 'pg';
 import postgres from 'postgres';
+import {
+  parse as parseArray,
+} from 'postgres-array';
 import * as sinon from 'sinon';
 import {
   createPostgresBridge,
@@ -194,6 +197,93 @@ for (const {
       {
         dataTypeID: 1_007,
         name: 'foo',
+      });
+  });
+
+  test(clientName + ': connection.query() returns numerics as string by default', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT 1::numeric AS foo');
+
+    t.is(result.rows.length, 1);
+    t.is(result.command, 'SELECT');
+    t.like(result.rows[0],
+      {
+        foo: '1',
+      });
+    t.like(result.fields[0],
+      {
+        dataTypeID: 1_700,
+        name: 'foo',
+      });
+  });
+
+  const NUMERIC_OID = 1_700;
+  const NUMERIC_ARRAY_OID = 1_231;
+
+  test(clientName + ': connection.query() parses numerics using type parser', async (t) => {
+    const pool = new Pool({
+      types: {
+        getTypeParser: (oid: number) => {
+          if (oid === NUMERIC_OID) {
+            return (value: string) => {
+              return Number.parseFloat(value);
+            };
+          }
+
+          return undefined;
+        },
+      },
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT 1::numeric AS foo');
+
+    t.like(result.rows[0],
+      {
+        foo: 1,
+      });
+  });
+
+  test(clientName + ': connection.query() parses numeric arrays using type parser', async (t) => {
+    const pool = new Pool({
+      types: {
+        getTypeParser: (oid: number) => {
+          if (oid === NUMERIC_OID) {
+            return (value: string) => {
+              return Number.parseFloat(value);
+            };
+          }
+
+          if (oid === NUMERIC_ARRAY_OID) {
+            return (value: string) => {
+              return parseArray(value).map((member) => {
+                return Number.parseFloat(member);
+              });
+            };
+          }
+
+          return undefined;
+        },
+      },
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT ARRAY[1]::numeric[] AS foo');
+
+    t.like(result.rows[0],
+      {
+        foo: [
+          1,
+        ],
       });
   });
 

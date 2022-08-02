@@ -37,10 +37,11 @@ This package allows to adopt `postgres` without going through a painful migratio
 
 ## Compatibility
 
-`postgres-bridge` is limited to the API that is consumed by [Slonik PostgreSQL client](https://www.npmjs.com/package/slonik), i.e. Using `postgres-bridge` you are able to use [`postgres`](https://www.npmjs.com/package/postgres) with Slonik.
+`postgres-bridge` was primarily developed to enable `postgres` use with [Slonik PostgreSQL client](https://www.npmjs.com/package/slonik). However, the scope has since been expanded to support several projects. It is now used in production by a handful real-world applications.
 
 Known incompatibilities:
 
+* Implicit query pooling is not implemented, i.e. You must use `pool.connect()`
 * `connection.processID` not implemented
 * `pool._pulseQueue` not implemented
 * [callback (CPS) interface](https://github.com/brianc/node-postgres/tree/master/packages/pg-pool#drop-in-backwards-compatible) is not implemented (use promises instead)

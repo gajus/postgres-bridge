@@ -19,7 +19,9 @@
     ]
   },
   "dependencies": {
-    "generic-pool": "^3.8.2"
+    "generic-pool": "^3.8.2",
+    "roarr": "^7.11.0",
+    "serialize-error": "^8.1.0"
   },
   "description": "pg compatibility layer for postgres.",
   "devDependencies": {
@@ -34,6 +36,7 @@
     "husky": "^7.0.2",
     "pg": "^8.7.3",
     "postgres": "^3.2.4",
+    "postgres-array": "^3.0.1",
     "semantic-release": "^19.0.2",
     "sinon": "^13.0.2",
     "ts-node": "^10.7.0",
