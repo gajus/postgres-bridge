@@ -131,7 +131,7 @@ for (const {
     t.is(pool.idleCount, 1);
   });
 
-  test(clientName + ': query method', async (t) => {
+  test(clientName + ': connection.query() returns expected results', async (t) => {
     const pool = new Pool({
       user: 'postgres',
     });
@@ -153,7 +153,7 @@ for (const {
       });
   });
 
-  test(clientName + ': query method with parameters', async (t) => {
+  test(clientName + ': connection.query() interpolates parameters', async (t) => {
     const pool = new Pool({
       user: 'postgres',
     });
@@ -164,16 +164,9 @@ for (const {
       'foo',
     ]);
 
-    t.is(result.rows.length, 1);
-    t.is(result.command, 'SELECT');
     t.like(result.rows[0],
       {
         '?column?': 'foo',
-      });
-    t.like(result.fields[0],
-      {
-        dataTypeID: 25,
-        name: '?column?',
       });
   });
 
