@@ -5,9 +5,6 @@ import genericPool, {
   type Pool as GenericPool,
 } from 'generic-pool';
 import type Postgres from 'postgres';
-import {
-  type Sql,
-} from 'postgres';
 
 type PgPool = {
   database?: string,
@@ -20,8 +17,6 @@ type PgPool = {
   ssl?: boolean,
   user?: string,
 };
-
-type AnySql = Sql<{}>;
 
 type Command = 'DELETE' | 'INSERT' | 'SELECT' | 'UPDATE';
 
@@ -38,18 +33,22 @@ type QueryResult = {
   rows: Row[],
 };
 
-type Client = AnySql & {events: EventEmitter, };
+export type BridgetClient = {
+  end: () => void,
+  off: (eventName: string, listener: (...args: any[]) => void) => void,
+  on: (eventName: string, listener: (...args: any[]) => void) => void,
+};
 
 export const createBridge = (postgres: typeof Postgres) => {
   return class PostgresBridge {
     private readonly poolEvents: EventEmitter;
 
-    private readonly pool: GenericPool<Client>;
+    private readonly pool: GenericPool<BridgetClient>;
 
     public constructor (poolConfiguration: PgPool) {
       this.poolEvents = new EventEmitter();
 
-      this.pool = genericPool.createPool<Client>({
+      this.pool = genericPool.createPool<BridgetClient>({
         create: async () => {
           const connectionEvents = new EventEmitter();
 
@@ -73,16 +72,39 @@ export const createBridge = (postgres: typeof Postgres) => {
             port: poolConfiguration.port ?? 5_432,
             ssl: poolConfiguration.ssl,
             username: poolConfiguration.user,
-          }) as Client;
-
-          connection.events = connectionEvents;
-
-          return connection;
-        },
-        destroy: (client: Sql<{}>) => {
-          return client.end({
-            timeout: 5,
           });
+
+          const compatibleConnection = {
+            end: async () => {
+              await connection.end();
+            },
+            off: connectionEvents.off.bind(connectionEvents),
+            on: connectionEvents.on.bind(connectionEvents),
+            query: async (sql: string, parameters): Promise<QueryResult> => {
+              // https://github.com/porsager/postgres#result-array
+              const resultArray = await connection.unsafe(sql, parameters);
+
+              return {
+                command: resultArray.command as Command,
+                fields: resultArray.columns?.map((column) => {
+                  return {
+                    dataTypeID: column.type,
+                    name: column.name,
+                  };
+                }) ?? [],
+                rowCount: resultArray.count,
+                rows: Array.from(resultArray),
+              };
+            },
+            release: async () => {
+              await this.pool.release(compatibleConnection);
+            },
+          };
+
+          return compatibleConnection;
+        },
+        destroy: async (client: BridgetClient) => {
+          client.end();
         },
       }, {
         max: poolConfiguration.max ?? 10,
@@ -93,36 +115,9 @@ export const createBridge = (postgres: typeof Postgres) => {
     public async connect () {
       const connection = await this.pool.acquire();
 
-      const compatibleConnection = {
-        end: async () => {
-          await this.pool.destroy(connection);
-        },
-        off: connection.events.off.bind(connection.events),
-        on: connection.events.on.bind(connection.events),
-        query: async (sql: string, parameters): Promise<QueryResult> => {
-          // https://github.com/porsager/postgres#result-array
-          const resultArray = await connection.unsafe(sql, parameters);
+      this.poolEvents.emit('connect', connection);
 
-          return {
-            command: resultArray.command as Command,
-            fields: resultArray.columns?.map((column) => {
-              return {
-                dataTypeID: column.type,
-                name: column.name,
-              };
-            }) ?? [],
-            rowCount: resultArray.count,
-            rows: Array.from(resultArray),
-          };
-        },
-        release: async () => {
-          await this.pool.release(connection);
-        },
-      };
-
-      this.poolEvents.emit('connect', compatibleConnection);
-
-      return compatibleConnection;
+      return connection;
     }
 
     public _pulseQueue () {
@@ -133,9 +128,11 @@ export const createBridge = (postgres: typeof Postgres) => {
       await client.end();
     }
 
-    public _clients () {
+    public get _clients () {
       // @ts-expect-error accessing private method
-      return Array.from(this.pool._allObjects);
+      return Array.from<{obj: BridgetClient, }>(this.pool._allObjects, (member) => {
+        return member.obj;
+      });
     }
 
     public get idleCount () {

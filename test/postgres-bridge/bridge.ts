@@ -156,4 +156,14 @@ for (const client of clients) {
         name: '?column?',
       });
   });
+
+  test(client + ': _clients returns all active connections', async (t) => {
+    const pool = createPool(client, {
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    t.is(pool._clients[0], connection);
+  });
 }
