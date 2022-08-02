@@ -1,6 +1,7 @@
 import test from 'ava';
 import {
   Pool as PgPool,
+// @ts-expect-error-next-line pg types not available
 } from 'pg';
 import postgres from 'postgres';
 import * as sinon from 'sinon';

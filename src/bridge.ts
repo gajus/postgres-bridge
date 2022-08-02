@@ -80,7 +80,7 @@ export const createBridge = (postgres: typeof Postgres) => {
             },
             off: connectionEvents.off.bind(connectionEvents),
             on: connectionEvents.on.bind(connectionEvents),
-            query: async (sql: string, parameters): Promise<QueryResult> => {
+            query: async (sql: string, parameters: Parameters<typeof connection.unsafe>[1]): Promise<QueryResult> => {
               // https://github.com/porsager/postgres#result-array
               const resultArray = await connection.unsafe(sql, parameters);
 
