@@ -75,8 +75,8 @@ export const bridge = (postgres: typeof Postgres, poolConfiguration: PgPool) => 
       });
     },
   }, {
-    max: poolConfiguration.max,
-    min: poolConfiguration.min,
+    max: poolConfiguration.max ?? 10,
+    min: poolConfiguration.min ?? 0,
   });
 
   const compatiblePool = {
