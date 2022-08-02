@@ -38,107 +38,109 @@ type QueryResult = {
   rows: Row[],
 };
 
-export class PostgresBridge {
-  private readonly poolEvents: EventEmitter;
+export const createBridge = (postgres: typeof Postgres) => {
+  return class PostgresBridge {
+    private readonly poolEvents: EventEmitter;
 
-  private readonly pool: GenericPool<AnySql & {events: EventEmitter, }>;
+    private readonly pool: GenericPool<AnySql & {events: EventEmitter, }>;
 
-  public constructor (postgres: typeof Postgres, poolConfiguration: PgPool) {
-    this.poolEvents = new EventEmitter();
+    public constructor (poolConfiguration: PgPool) {
+      this.poolEvents = new EventEmitter();
 
-    this.pool = genericPool.createPool<AnySql & {events: EventEmitter, }>({
-      create: async () => {
-        const connectionEvents = new EventEmitter();
+      this.pool = genericPool.createPool<AnySql & {events: EventEmitter, }>({
+        create: async () => {
+          const connectionEvents = new EventEmitter();
 
-        const connection = postgres({
-          database: poolConfiguration.database,
-          host: poolConfiguration.host ?? 'localhost',
-          idle_timeout: poolConfiguration.idleTimeoutMillis ? poolConfiguration.idleTimeoutMillis / 1_000 : 0,
-          max: 1,
-          onnotice: (notice) => {
-            connectionEvents.emit('notice', {
-              code: notice.code,
-              file: notice.file,
-              line: notice.line,
-              message: notice.message,
-              routine: notice.routine,
-              severity: notice.severity,
-              where: notice.where,
-            });
-          },
-          password: poolConfiguration.password,
-          port: poolConfiguration.port ?? 5_432,
-          ssl: poolConfiguration.ssl,
-          username: poolConfiguration.user,
-        }) as AnySql & {events: EventEmitter, };
+          const connection = postgres({
+            database: poolConfiguration.database,
+            host: poolConfiguration.host ?? 'localhost',
+            idle_timeout: poolConfiguration.idleTimeoutMillis ? poolConfiguration.idleTimeoutMillis / 1_000 : 0,
+            max: 1,
+            onnotice: (notice) => {
+              connectionEvents.emit('notice', {
+                code: notice.code,
+                file: notice.file,
+                line: notice.line,
+                message: notice.message,
+                routine: notice.routine,
+                severity: notice.severity,
+                where: notice.where,
+              });
+            },
+            password: poolConfiguration.password,
+            port: poolConfiguration.port ?? 5_432,
+            ssl: poolConfiguration.ssl,
+            username: poolConfiguration.user,
+          }) as AnySql & {events: EventEmitter, };
 
-        connection.events = connectionEvents;
+          connection.events = connectionEvents;
 
-        return connection;
-      },
-      destroy: (client: Sql<{}>) => {
-        return client.end({
-          timeout: 5,
-        });
-      },
-    }, {
-      max: poolConfiguration.max ?? 10,
-      min: poolConfiguration.min ?? 0,
-    });
-  }
+          return connection;
+        },
+        destroy: (client: Sql<{}>) => {
+          return client.end({
+            timeout: 5,
+          });
+        },
+      }, {
+        max: poolConfiguration.max ?? 10,
+        min: poolConfiguration.min ?? 0,
+      });
+    }
 
-  public async connect () {
-    const connection = await this.pool.acquire();
+    public async connect () {
+      const connection = await this.pool.acquire();
 
-    const compatibleConnection = {
-      end: async () => {
-        await this.pool.destroy(connection);
-      },
-      off: connection.events.off.bind(connection.events),
-      on: connection.events.on.bind(connection.events),
-      query: async (sql: string): Promise<QueryResult> => {
-        // https://github.com/porsager/postgres#result-array
-        const resultArray = await connection.unsafe(sql);
+      const compatibleConnection = {
+        end: async () => {
+          await this.pool.destroy(connection);
+        },
+        off: connection.events.off.bind(connection.events),
+        on: connection.events.on.bind(connection.events),
+        query: async (sql: string): Promise<QueryResult> => {
+          // https://github.com/porsager/postgres#result-array
+          const resultArray = await connection.unsafe(sql);
 
-        return {
-          command: resultArray.command as Command,
-          fields: resultArray.columns?.map((column) => {
-            return {
-              dataTypeID: column.type,
-              name: column.name,
-            };
-          }) ?? [],
-          rowCount: resultArray.count,
-          rows: Array.from(resultArray),
-        };
-      },
-      release: async () => {
-        await this.pool.release(connection);
-      },
-    };
+          return {
+            command: resultArray.command as Command,
+            fields: resultArray.columns?.map((column) => {
+              return {
+                dataTypeID: column.type,
+                name: column.name,
+              };
+            }) ?? [],
+            rowCount: resultArray.count,
+            rows: Array.from(resultArray),
+          };
+        },
+        release: async () => {
+          await this.pool.release(connection);
+        },
+      };
 
-    this.poolEvents.emit('connect', compatibleConnection);
+      this.poolEvents.emit('connect', compatibleConnection);
 
-    return compatibleConnection;
-  }
+      return compatibleConnection;
+    }
 
-  public get idleCount () {
-    return this.pool.available;
-  }
+    public get idleCount () {
+      return this.pool.available;
+    }
 
-  public off (eventName: string, listener: (...args: any[]) => void) {
-    return this.poolEvents.off(eventName, listener);
-  }
+    public off (eventName: string, listener: (...args: any[]) => void) {
+      return this.poolEvents.off(eventName, listener);
+    }
 
-  public on (eventName: string, listener: (...args: any[]) => void) {
-    return this.poolEvents.on(eventName, listener);
-  }
+    public on (eventName: string, listener: (...args: any[]) => void) {
+      return this.poolEvents.on(eventName, listener);
+    }
 
-  public get totalCount () {
-    return this.pool.size;
-  }
+    public get totalCount () {
+      return this.pool.size;
+    }
 
-  public get waitingCount () {
-    return this.pool.pending;
-  }
-}
+    public get waitingCount () {
+      return this.pool.pending;
+    }
+  };
+};

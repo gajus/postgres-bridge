@@ -5,7 +5,7 @@ import {
 import postgres from 'postgres';
 import * as sinon from 'sinon';
 import {
-  PostgresBridge,
+  createBridge,
 } from '../../src/bridge';
 
 const clients = [
@@ -18,7 +18,9 @@ const createPool = (clientName: string, poolConfiguration) => {
     return new Pool(poolConfiguration);
   }
 
-  return new PostgresBridge(postgres, {
+  const PostgresBridge = createBridge(postgres);
+
+  return new PostgresBridge({
     ...poolConfiguration,
   });
 };

@@ -9,7 +9,9 @@ Wraps [`postgres`](https://www.npmjs.com/package/postgres) API in a [`pg`](https
 
 ```ts
 import postgres from 'postgres';
-import { PostgresBridge } from 'postgres-bridge';
+import { createBridge } from 'postgres-bridge';
+
+const PostgresBridge = createBridge(postgres);
 
 // pg.Pool Configuration
 const configuration = {
@@ -20,7 +22,7 @@ const configuration = {
   connectionTimeoutMillis: 2000,
 };
 
-const pool = new PostgresBridge(postgres, configuration);
+const pool = new PostgresBridge(configuration);
 
 const connection = await pool.connect();
 
