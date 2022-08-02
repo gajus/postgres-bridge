@@ -9,7 +9,7 @@ Wraps [`postgres`](https://www.npmjs.com/package/postgres) API in a [`pg`](https
 
 ```ts
 import postgres from 'postgres';
-import { bridge } from 'postgres-bridge';
+import { PostgresBridge } from 'postgres-bridge';
 
 // pg.Pool Configuration
 const configuration = {
@@ -20,7 +20,7 @@ const configuration = {
   connectionTimeoutMillis: 2000,
 };
 
-const pool = bridge(postgres, configuration);
+const pool = new PostgresBridge(postgres, configuration);
 
 const connection = await pool.connect();
 
@@ -41,6 +41,10 @@ Supported features:
 * `connection.query`
 * `connect` event
 * `notice` event
+
+Known incompatibilities:
+
+* `connection.processID` not implemented
 
 Please submit PR if you require additional compatibility.
 
