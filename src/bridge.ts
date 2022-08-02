@@ -38,16 +38,18 @@ type QueryResult = {
   rows: Row[],
 };
 
+type Client = AnySql & {events: EventEmitter, };
+
 export const createBridge = (postgres: typeof Postgres) => {
   return class PostgresBridge {
     private readonly poolEvents: EventEmitter;
 
-    private readonly pool: GenericPool<AnySql & {events: EventEmitter, }>;
+    private readonly pool: GenericPool<Client>;
 
     public constructor (poolConfiguration: PgPool) {
       this.poolEvents = new EventEmitter();
 
-      this.pool = genericPool.createPool<AnySql & {events: EventEmitter, }>({
+      this.pool = genericPool.createPool<Client>({
         create: async () => {
           const connectionEvents = new EventEmitter();
 
@@ -71,7 +73,7 @@ export const createBridge = (postgres: typeof Postgres) => {
             port: poolConfiguration.port ?? 5_432,
             ssl: poolConfiguration.ssl,
             username: poolConfiguration.user,
-          }) as AnySql & {events: EventEmitter, };
+          }) as Client;
 
           connection.events = connectionEvents;
 
@@ -129,6 +131,11 @@ export const createBridge = (postgres: typeof Postgres) => {
 
     public async _remove (client: {end: () => Promise<void>, }) {
       await client.end();
+    }
+
+    public _clients () {
+      // @ts-expect-error accessing private method
+      return Array.from(this.pool._allObjects);
     }
 
     public get idleCount () {
