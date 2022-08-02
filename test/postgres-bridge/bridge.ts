@@ -1,6 +1,6 @@
 import test from 'ava';
 import {
-  Pool,
+  Pool as PgPool,
 } from 'pg';
 import postgres from 'postgres';
 import * as sinon from 'sinon';
@@ -8,26 +8,25 @@ import {
   createBridge,
 } from '../../src/bridge';
 
+const PostgresBridge = createBridge(postgres);
+
 const clients = [
-  'pg',
-  'postgres',
+  {
+    name: 'pg',
+    Pool: PgPool,
+  },
+  {
+    name: 'postgres-bridge',
+    Pool: PostgresBridge,
+  },
 ];
 
-const createPool = (clientName: string, poolConfiguration) => {
-  if (clientName === 'pg') {
-    return new Pool(poolConfiguration);
-  }
-
-  const PostgresBridge = createBridge(postgres);
-
-  return new PostgresBridge({
-    ...poolConfiguration,
-  });
-};
-
-for (const client of clients) {
-  test(client + ': "connect" event is fired when a new connection is made', async (t) => {
-    const pool = createPool(client, {
+for (const {
+  name: clientName,
+  Pool,
+} of clients) {
+  test(clientName + ': "connect" event is fired when a new connection is made', async (t) => {
+    const pool = new Pool({
       user: 'postgres',
     });
 
@@ -42,8 +41,8 @@ for (const client of clients) {
     t.is(spy.firstCall.args[0], connection);
   });
 
-  test(client + ': "notice event is fired when connection produces a notice"', async (t) => {
-    const pool = createPool(client, {
+  test(clientName + ': "notice event is fired when connection produces a notice"', async (t) => {
+    const pool = new Pool({
       user: 'postgres',
     });
 
@@ -58,7 +57,7 @@ for (const client of clients) {
     DECLARE
       a INT:= 10;
     BEGIN
-      RAISE NOTICE 'value of a: %', a; 
+      RAISE NOTICE 'value of a: %', a;
     END;
     $$
     LANGUAGE plpgsql;
@@ -81,8 +80,8 @@ for (const client of clients) {
     });
   });
 
-  test(client + ': pool.connect() 2x creates two connections', async (t) => {
-    const pool = createPool(client, {
+  test(clientName + ': pool.connect() 2x creates two connections', async (t) => {
+    const pool = new Pool({
       user: 'postgres',
     });
 
@@ -97,8 +96,8 @@ for (const client of clients) {
     await connection2.end();
   });
 
-  test(client + ': connection.release() releases connection back to the pool', async (t) => {
-    const pool = createPool(client, {
+  test(clientName + ': connection.release() releases connection back to the pool', async (t) => {
+    const pool = new Pool({
       user: 'postgres',
     });
 
@@ -111,8 +110,8 @@ for (const client of clients) {
     t.is(pool.idleCount, 1);
   });
 
-  test(client + ': query method', async (t) => {
-    const pool = createPool(client, {
+  test(clientName + ': query method', async (t) => {
+    const pool = new Pool({
       user: 'postgres',
     });
 
@@ -133,8 +132,8 @@ for (const client of clients) {
       });
   });
 
-  test(client + ': query method with parameters', async (t) => {
-    const pool = createPool(client, {
+  test(clientName + ': query method with parameters', async (t) => {
+    const pool = new Pool({
       user: 'postgres',
     });
 
@@ -157,8 +156,8 @@ for (const client of clients) {
       });
   });
 
-  test(client + ': _clients returns all active connections', async (t) => {
-    const pool = createPool(client, {
+  test(clientName + ': _clients returns all active connections', async (t) => {
+    const pool = new Pool({
       user: 'postgres',
     });
 
