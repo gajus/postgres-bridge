@@ -79,6 +79,36 @@ for (const client of clients) {
     });
   });
 
+  test(client + ': pool.connect() 2x creates two connections', async (t) => {
+    const pool = createPool(client, {
+      user: 'postgres',
+    });
+
+    t.is(pool.totalCount, 0);
+
+    const connection1 = await pool.connect();
+    const connection2 = await pool.connect();
+
+    t.is(pool.totalCount, 2);
+
+    await connection1.end();
+    await connection2.end();
+  });
+
+  test(client + ': connection.release() releases connection back to the pool', async (t) => {
+    const pool = createPool(client, {
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    t.is(pool.idleCount, 0);
+
+    await connection.release();
+
+    t.is(pool.idleCount, 1);
+  });
+
   test(client + ': query method', async (t) => {
     const pool = createPool(client, {
       user: 'postgres',

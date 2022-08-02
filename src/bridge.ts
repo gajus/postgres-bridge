@@ -79,11 +79,14 @@ export const bridge = (postgres: typeof Postgres, poolConfiguration: PgPool) => 
     min: poolConfiguration.min,
   });
 
-  return {
+  const compatiblePool = {
     connect: async () => {
       const connection = await pool.acquire();
 
       const compatibleConnection = {
+        end: async () => {
+          await pool.destroy(connection);
+        },
         off: connection.events.off.bind(connection.events),
         on: connection.events.on.bind(connection.events),
         query: async (sql: string): Promise<QueryResult> => {
@@ -102,13 +105,27 @@ export const bridge = (postgres: typeof Postgres, poolConfiguration: PgPool) => 
             rows: Array.from(resultArray),
           };
         },
+        release: async () => {
+          await pool.release(connection);
+        },
       };
 
       poolEvents.emit('connect', compatibleConnection);
 
       return compatibleConnection;
     },
+    get idleCount () {
+      return pool.available;
+    },
     off: poolEvents.off.bind(poolEvents),
     on: poolEvents.on.bind(poolEvents),
+    get totalCount () {
+      return pool.size;
+    },
+    get waitingCount () {
+      return pool.pending;
+    },
   };
+
+  return compatiblePool;
 };
