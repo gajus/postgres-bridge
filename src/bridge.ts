@@ -108,7 +108,7 @@ export const createBridge = (postgres: typeof Postgres) => {
 
           const compatibleConnection = {
             end: async () => {
-              await connection.end();
+              await this.pool.destroy(compatibleConnection);
             },
             off: connectionEvents.off.bind(connectionEvents),
             on: connectionEvents.on.bind(connectionEvents),
@@ -190,9 +190,7 @@ export const createBridge = (postgres: typeof Postgres) => {
     }
 
     public async end () {
-      for (const client of this._clients) {
-        await client.end();
-      }
+      await this.pool.clear();
     }
   };
 };

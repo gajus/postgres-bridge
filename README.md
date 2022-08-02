@@ -49,6 +49,7 @@ Known incompatibilities:
 
 * `connection.processID` not implemented
 * `pool._pulseQueue` not implemented
+* callback (CPS) interface not implemented (use promises instead)
 
 Please submit PR if you require additional compatibility.
 

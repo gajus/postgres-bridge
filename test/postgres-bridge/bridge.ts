@@ -117,6 +117,26 @@ for (const {
     await connection2.end();
   });
 
+  test(clientName + ': pool.end() destroys all connections', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    t.is(pool.totalCount, 0);
+
+    const connection1 = await pool.connect();
+    const connection2 = await pool.connect();
+
+    t.is(pool.totalCount, 2);
+
+    await connection1.release();
+    await connection2.release();
+
+    await pool.end();
+
+    t.is(pool.totalCount, 0);
+  });
+
   test(clientName + ': connection.release() releases connection back to the pool', async (t) => {
     const pool = new Pool({
       user: 'postgres',
