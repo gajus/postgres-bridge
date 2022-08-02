@@ -59,6 +59,8 @@ postgres query: 867ms
 postgres-bridge query: 871ms
 ```
 
+While these benchmarks do not show meaningful difference between `pg` and `postgres`, in production, in a large codebase, we noticed average response time improve by 30%. It means that in real-world scenarios, `postgres` overhead is significantly lesser than that of `pg`.
+
 ## Development
 
 Running `postgres-bridge` tests requires having a local PostgreSQL instance.
