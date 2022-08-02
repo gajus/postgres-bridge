@@ -71,7 +71,7 @@ export type BridgetClient = {
   release: () => Promise<void>,
 };
 
-export const createBridge = (postgres: typeof Postgres) => {
+export const createPostgresBridge = (postgres: typeof Postgres) => {
   return class PostgresBridge {
     public readonly poolEvents: EventEmitter;
 

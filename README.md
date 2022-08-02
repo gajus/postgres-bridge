@@ -9,9 +9,9 @@ Wraps [`postgres`](https://www.npmjs.com/package/postgres) API in a [`pg`](https
 
 ```ts
 import postgres from 'postgres';
-import { createBridge } from 'postgres-bridge';
+import { createPostgresBridge } from 'postgres-bridge';
 
-const PostgresBridge = createBridge(postgres);
+const PostgresBridge = createPostgresBridge(postgres);
 
 // pg.Pool Configuration
 const configuration = {

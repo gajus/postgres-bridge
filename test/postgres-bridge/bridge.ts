@@ -6,10 +6,10 @@ import {
 import postgres from 'postgres';
 import * as sinon from 'sinon';
 import {
-  createBridge,
+  createPostgresBridge,
 } from '../../src/bridge';
 
-const PostgresBridge = createBridge(postgres);
+const PostgresBridge = createPostgresBridge(postgres);
 
 const clients = [
   {
