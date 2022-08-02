@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   EventEmitter,
 } from 'node:events';
@@ -20,7 +22,6 @@ type PgPool = {
 
 type Command = 'DELETE' | 'INSERT' | 'SELECT' | 'UPDATE';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
 
 type QueryResult = {
@@ -33,10 +34,40 @@ type QueryResult = {
   rows: Row[],
 };
 
+declare class NotAPromise {
+  private then (): never;
+  private catch (): never;
+  private finally (): never;
+}
+
+type Parameter<T = SerializableParameter> = NotAPromise & {
+  /**
+   * Raw value to serialize
+   */
+  raw: T | null,
+  /**
+   * PostgreSQL OID of the type
+   */
+  type: number,
+  /**
+   * Serialized value
+   */
+  value: string | null,
+};
+
+type Serializable = Date | Uint8Array | boolean | never | number | string | null;
+
+type ArrayParameter<T extends readonly any[] = readonly any[]> = Parameter<T | T[]> & {
+  array: true,
+};
+
+type SerializableParameter<T = never> = ArrayParameter | Parameter<any> | ReadonlyArray<SerializableParameter<T>> | Serializable | T | never;
+
 export type BridgetClient = {
   end: () => void,
   off: (eventName: string, listener: (...args: any[]) => void) => void,
   on: (eventName: string, listener: (...args: any[]) => void) => void,
+  query: (sql: string, parameters: SerializableParameter[]) => Promise<QueryResult>,
 };
 
 export const createBridge = (postgres: typeof Postgres) => {
@@ -80,9 +111,9 @@ export const createBridge = (postgres: typeof Postgres) => {
             },
             off: connectionEvents.off.bind(connectionEvents),
             on: connectionEvents.on.bind(connectionEvents),
-            query: async (sql: string, parameters: Parameters<typeof connection.unsafe>[1]): Promise<QueryResult> => {
+            query: async (sql: string, parameters: SerializableParameter[]): Promise<QueryResult> => {
               // https://github.com/porsager/postgres#result-array
-              const resultArray = await connection.unsafe(sql, parameters);
+              const resultArray = await connection.unsafe(sql, parameters as any);
 
               return {
                 command: resultArray.command as Command,
@@ -128,7 +159,7 @@ export const createBridge = (postgres: typeof Postgres) => {
       await client.end();
     }
 
-    public get _clients () {
+    public get _clients (): BridgetClient[] {
       // @ts-expect-error accessing private method
       return Array.from<{obj: BridgetClient, }>(this.pool._allObjects, (member) => {
         return member.obj;
@@ -153,6 +184,12 @@ export const createBridge = (postgres: typeof Postgres) => {
 
     public get waitingCount () {
       return this.pool.pending;
+    }
+
+    public async end () {
+      for (const client of this._clients) {
+        client.end();
+      }
     }
   };
 };
