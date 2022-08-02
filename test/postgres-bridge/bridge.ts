@@ -287,6 +287,40 @@ for (const {
       });
   });
 
+  test(clientName + ': connection.query() parses json', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT \'{"bar":"baz"}\'::json AS foo');
+
+    t.like(result.rows[0],
+      {
+        foo: {
+          bar: 'baz',
+        },
+      });
+  });
+
+  test(clientName + ': connection.query() parses jsonb', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT \'{"bar":"baz"}\'::jsonb AS foo');
+
+    t.like(result.rows[0],
+      {
+        foo: {
+          bar: 'baz',
+        },
+      });
+  });
+
   test(clientName + ': connection.query() interpolates parameters', async (t) => {
     const pool = new Pool({
       user: 'postgres',
