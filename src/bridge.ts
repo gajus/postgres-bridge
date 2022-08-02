@@ -67,7 +67,7 @@ export type BridgetClient = {
   end: () => Promise<void>,
   off: (eventName: string, listener: (...args: any[]) => void) => void,
   on: (eventName: string, listener: (...args: any[]) => void) => void,
-  query: (sql: string, parameters: SerializableParameter[]) => Promise<QueryResult>,
+  query: (sql: string, parameters?: SerializableParameter[]) => Promise<QueryResult>,
   release: () => Promise<void>,
 };
 
@@ -112,7 +112,7 @@ export const createPostgresBridge = (postgres: typeof Postgres) => {
             },
             off: connectionEvents.off.bind(connectionEvents),
             on: connectionEvents.on.bind(connectionEvents),
-            query: async (sql: string, parameters: SerializableParameter[]): Promise<QueryResult> => {
+            query: async (sql: string, parameters?: SerializableParameter[]): Promise<QueryResult> => {
               // https://github.com/porsager/postgres#result-array
               const resultArray = await connection.unsafe(sql, parameters as any);
 
