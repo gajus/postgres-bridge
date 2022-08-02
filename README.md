@@ -47,6 +47,8 @@ Supported features:
 Known incompatibilities:
 
 * `connection.processID` not implemented
+* `pool._pulseQueue` not implemented
+* `pool._remove` not implemented
 
 Please submit PR if you require additional compatibility.
 
