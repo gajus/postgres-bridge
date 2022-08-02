@@ -132,4 +132,28 @@ for (const client of clients) {
         name: '?column?',
       });
   });
+
+  test(client + ': query method with parameters', async (t) => {
+    const pool = createPool(client, {
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT $1', [
+      'foo',
+    ]);
+
+    t.is(result.rows.length, 1);
+    t.is(result.command, 'SELECT');
+    t.like(result.rows[0],
+      {
+        '?column?': 'foo',
+      });
+    t.like(result.fields[0],
+      {
+        dataTypeID: 25,
+        name: '?column?',
+      });
+  });
 }
