@@ -49,6 +49,16 @@ Known incompatibilities:
 
 Please submit PR if you require additional compatibility.
 
+## Benchmark
+
+A basic [benchmark](./test/postgres-bridge/benchmark.ts) shows no overhead as a result of using `postgres-bridge`:
+
+```
+pg query: 880ms
+postgres query: 867ms
+postgres-bridge query: 871ms
+```
+
 ## Development
 
 Running `postgres-bridge` tests requires having a local PostgreSQL instance.
