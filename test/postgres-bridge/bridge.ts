@@ -120,7 +120,7 @@ for (const {
     await connection2.end();
   });
 
-  test(clientName + ': pool.end() immediately resolves if all connections are released', async (t) => {
+  test(clientName + ': pool.end() resolves immediately if all connections are released', async (t) => {
     const pool = new Pool({
       user: 'postgres',
     });
@@ -134,6 +134,36 @@ for (const {
 
     await connection1.release();
     await connection2.release();
+
+    const startTime = Date.now();
+
+    await pool.end();
+
+    const duration = Date.now() - startTime;
+
+    // If duration is longer than a couple milliseconds then something is off.
+    t.true(duration < 10);
+
+    t.is(pool.totalCount, 0);
+  });
+
+  // This appears to be a bug in pg-pool
+  // https://github.com/brianc/node-postgres/issues/2778
+  // eslint-disable-next-line ava/no-skip-test
+  test.skip(clientName + ': pool.end() resolves immediately if all connections are ended', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    t.is(pool.totalCount, 0);
+
+    const connection1 = await pool.connect();
+    const connection2 = await pool.connect();
+
+    t.is(pool.totalCount, 2);
+
+    await connection1.end();
+    await connection2.end();
 
     const startTime = Date.now();
 
