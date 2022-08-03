@@ -12,7 +12,8 @@
         "project": "./tsconfig.json"
       },
       "rules": {
-        "no-console": 0
+        "no-console": 0,
+        "@typescript-eslint/no-unnecessary-condition": 0
       }
     },
     {

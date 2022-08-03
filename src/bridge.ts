@@ -48,6 +48,7 @@ type QueryResult = {
 };
 
 declare class NotAPromise {
+  // eslint-disable-next-line unicorn/no-thenable
   private then (): never;
   private catch (): never;
   private finally (): never;
@@ -125,7 +126,7 @@ export const createPostgresBridge = (postgres: typeof Postgres) => {
               let typeParser;
 
               try {
-                typeParser = poolConfiguration.types?.getTypeParser(pgType.oid);
+                typeParser = poolConfiguration.types.getTypeParser(pgType.oid);
               } catch (error) {
                 log.error({
                   error: serializeError(error),
