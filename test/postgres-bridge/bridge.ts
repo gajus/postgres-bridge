@@ -1,3 +1,6 @@
+import {
+  setTimeout,
+} from 'node:timers/promises';
 import test from 'ava';
 import {
   Pool as PgPool,
@@ -118,6 +121,22 @@ for (const {
 
     await connection1.end();
     await connection2.end();
+  });
+
+  test(clientName + ': pool.connect() limited to max connections', async (t) => {
+    const pool = new Pool({
+      max: 1,
+      user: 'postgres',
+    });
+
+    t.is(pool.totalCount, 0);
+
+    void pool.connect();
+    void pool.connect();
+
+    await setTimeout(1_000);
+
+    t.is(pool.totalCount, 1);
   });
 
   test(clientName + ': pool.end() resolves immediately if all connections are released', async (t) => {
