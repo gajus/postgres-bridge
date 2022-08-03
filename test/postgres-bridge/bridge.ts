@@ -321,6 +321,27 @@ for (const {
       });
   });
 
+  test(clientName + ': connection.query() serializes json', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    const result = await connection.query('SELECT $1::json AS foo', [
+      {
+        bar: 'baz',
+      },
+    ]);
+
+    t.like(result.rows[0],
+      {
+        foo: {
+          bar: 'baz',
+        },
+      });
+  });
+
   test(clientName + ': connection.query() interpolates parameters', async (t) => {
     const pool = new Pool({
       user: 'postgres',
