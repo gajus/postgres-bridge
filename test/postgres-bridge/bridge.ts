@@ -120,7 +120,7 @@ for (const {
     await connection2.end();
   });
 
-  test(clientName + ': pool.end() destroys all connections', async (t) => {
+  test(clientName + ': pool.end() immediately resolves if all connections are released', async (t) => {
     const pool = new Pool({
       user: 'postgres',
     });
@@ -135,7 +135,14 @@ for (const {
     await connection1.release();
     await connection2.release();
 
+    const startTime = Date.now();
+
     await pool.end();
+
+    const duration = Date.now() - startTime;
+
+    // If duration is longer than a couple milliseconds then something is off.
+    t.true(duration < 10);
 
     t.is(pool.totalCount, 0);
   });
