@@ -139,6 +139,20 @@ for (const {
     t.is(pool.totalCount, 1);
   });
 
+  // https://github.com/brianc/node-postgres/issues/1869
+  // eslint-disable-next-line ava/no-skip-test
+  test.skip(clientName + ': pool.connect() creates at least min connections', async (t) => {
+    const pool = new Pool({
+      max: 10,
+      min: 5,
+      user: 'postgres',
+    });
+
+    await setTimeout(1_000);
+
+    t.is(pool.totalCount, 5);
+  });
+
   test(clientName + ': pool.end() resolves immediately if all connections are released', async (t) => {
     const pool = new Pool({
       user: 'postgres',
