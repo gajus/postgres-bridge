@@ -189,8 +189,12 @@ export const createPostgresBridge = (postgres: typeof Postgres) => {
                 rows: Array.from(resultArray),
               };
             },
-            release: async () => {
-              await this.pool.release(compatibleConnection);
+            release: async (remove: boolean = false) => {
+              if (remove) {
+                await this.pool.destroy(compatibleConnection);
+              } else {
+                await this.pool.release(compatibleConnection);
+              }
             },
           };
 

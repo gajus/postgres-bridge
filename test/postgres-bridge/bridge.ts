@@ -191,6 +191,20 @@ for (const {
     t.is(pool.idleCount, 1);
   });
 
+  test(clientName + ': connection.release(true) removes connection from the pool', async (t) => {
+    const pool = new Pool({
+      user: 'postgres',
+    });
+
+    const connection = await pool.connect();
+
+    t.is(pool.totalCount, 1);
+
+    await connection.release(true);
+
+    t.is(pool.totalCount, 0);
+  });
+
   test(clientName + ': connection.query() returns integers', async (t) => {
     const pool = new Pool({
       user: 'postgres',
