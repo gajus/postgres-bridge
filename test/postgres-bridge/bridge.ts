@@ -1,7 +1,10 @@
 import {
+  createPostgresBridge,
+} from '../../src/bridge';
+import test from 'ava';
+import {
   setTimeout,
 } from 'node:timers/promises';
-import test from 'ava';
 import {
   Pool as PgPool,
 // @ts-expect-error-next-line pg types not available
@@ -11,9 +14,6 @@ import {
   parse as parseArray,
 } from 'postgres-array';
 import * as sinon from 'sinon';
-import {
-  createPostgresBridge,
-} from '../../src/bridge';
 
 const PostgresBridge = createPostgresBridge(postgres);
 

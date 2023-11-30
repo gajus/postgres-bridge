@@ -1,15 +1,15 @@
 // This is not really a test, but just a sanity check to ensure
 // that our wrapper does not add substantial overhead to `postgres` implementation.
 
+import {
+  createPostgresBridge,
+} from '../../src/bridge';
 import test from 'ava';
 import {
   Pool as PgPool,
 // @ts-expect-error-next-line pg types not available
 } from 'pg';
 import postgres from 'postgres';
-import {
-  createPostgresBridge,
-} from '../../src/bridge';
 
 const PostgresBridge = createPostgresBridge(postgres);
 

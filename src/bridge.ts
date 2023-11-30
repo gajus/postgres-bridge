@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-  EventEmitter,
-} from 'node:events';
 import genericPool, {
   type Pool as GenericPool,
 } from 'generic-pool';
+import {
+  EventEmitter,
+} from 'node:events';
 import type Postgres from 'postgres';
 import {
   Roarr,
