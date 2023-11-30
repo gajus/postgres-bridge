@@ -99,7 +99,7 @@ for (const {
     t.like(spy.firstCall.args[0], {
       code: '00000',
       file: 'pl_exec.c',
-      line: '3859',
+      line: '3909',
       message: 'value of a: 10',
       routine: 'exec_stmt_raise',
       severity: 'NOTICE',
