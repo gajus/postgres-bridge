@@ -19,7 +19,7 @@
     ]
   },
   "dependencies": {
-    "generic-pool": "^3.8.2",
+    "generic-pool": "^3.9.0",
     "roarr": "^7.21.0",
     "serialize-error": "^8.1.0"
   },
@@ -34,9 +34,9 @@
     "eslint": "^8.54.0",
     "eslint-config-canonical": "^42.8.0",
     "husky": "^8.0.3",
-    "pg": "^8.7.3",
-    "postgres": "^3.2.4",
-    "postgres-array": "^3.0.1",
+    "pg": "^8.11.3",
+    "postgres": "^3.4.3",
+    "postgres-array": "^3.0.2",
     "semantic-release": "^22.0.8",
     "sinon": "^17.0.1",
     "ts-node": "^10.9.1",
